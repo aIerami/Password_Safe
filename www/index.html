@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="theme-color" content="#050a16">
+<title>Сейф паролей</title>
+<style>
+:root{--bg:#050a16;--bg2:#0b1530;--bg3:#07101f;--line:#15264a;--line2:#27447f;--acc:#27b4ff;--txt:#e8f3ff;--dim:#8097bd;--warn:#ffb54a;--bad:#ff5a73;--ok:#3be8b0}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:17px/1.4 system-ui,-apple-system,Roboto,"Segoe UI",sans-serif;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+input,textarea,select,button{font:inherit;color:inherit}
+input,textarea{-webkit-user-select:text;user-select:text}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.scr{display:flex;flex-direction:column;flex:1;min-height:0}
+.hd{display:flex;align-items:center;gap:8px;padding:8px 12px;min-height:60px;border-bottom:1px solid var(--line)}
+.hd h1{margin:0;flex:1;font-size:18px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.hd .sub{color:var(--dim);font-size:13px;letter-spacing:.04em}
+.body{flex:1;min-height:0;overflow-y:auto;padding:16px}
+.bar{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
+.ic{display:inline-flex;width:24px;height:24px;flex:none}
+.ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:0 18px;border:1px solid var(--line2);border-radius:8px;background:var(--bg2);font-weight:600;cursor:pointer;flex:1;text-align:center}
+.btn:active{background:#12224a}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#02122a}
+.btn.pri:active{background:#5cc8ff}
+.btn.bad{border-color:var(--bad);color:var(--bad)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--acc);flex:none}
+.btn.sm{min-height:44px;padding:0 14px;flex:none}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.btn.sq{flex:none;width:52px;padding:0}
+.btn.w2{flex:2}
+.body>.btn,.body>form+.btn{width:100%}
+.btn.ghost{justify-content:center;width:100%}
+.ib{flex:none;width:48px;height:48px;display:grid;place-items:center;background:none;border:0;color:var(--acc);border-radius:8px}
+.ib:active{background:var(--bg2)}
+.fld{margin-bottom:18px}
+.lb{display:block;margin-bottom:6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.inp{width:100%;height:54px;padding:0 14px;background:var(--bg3);border:1px solid var(--line2);border-radius:8px;outline:none}
+.inp:focus{border-color:var(--acc)}
+textarea.inp{height:110px;padding:12px 14px;resize:none}
+select.inp{appearance:none;-webkit-appearance:none}
+.pw{position:relative}
+.pw .inp{padding-right:56px}
+.eye{position:absolute;right:2px;top:3px;width:48px;height:48px;display:grid;place-items:center;background:none;border:0;color:var(--dim)}
+.msg{min-height:22px;margin:6px 0 12px;color:var(--bad);font-size:15px}
+.msg.ok{color:var(--ok)}
+.note{margin:0 0 18px;padding:2px 0 2px 14px;border-left:3px solid var(--acc);color:var(--dim);font-size:15px}
+.note.warn{border-color:var(--warn);color:var(--txt)}
+.note b{color:var(--warn)}
+.meter{margin:10px 0 4px}
+.segs{display:flex;gap:6px}
+.segs i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.segs i.l1{background:var(--bad)}.segs i.l2{background:var(--warn)}.segs i.l3{background:var(--acc)}.segs i.l4{background:var(--ok)}
+.ml{display:block;margin-top:6px;min-height:20px;font-size:14px;color:var(--dim)}
+.chk{position:relative;display:flex;align-items:center;gap:12px;min-height:52px;cursor:pointer}
+.chk input{position:absolute;opacity:0;pointer-events:none}
+.chk i{width:26px;height:26px;border:2px solid var(--line2);border-radius:6px;flex:none;display:grid;place-items:center}
+.chk input:checked+i{background:var(--acc);border-color:var(--acc)}
+.chk input:checked+i::after{content:"";width:6px;height:12px;border:solid #02122a;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.center{justify-content:center}
+.logo{display:grid;place-items:center;width:84px;height:84px;margin:8px auto 14px;border:2px solid var(--acc);border-radius:20px;color:var(--acc)}
+.logo svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.h2{margin:0 0 6px;font-size:22px;text-align:center;font-weight:700;letter-spacing:.06em}
+.lead{margin:0 0 20px;text-align:center;color:var(--dim)}
+.grid{background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:36px 36px;background-position:-1px -1px}
+.search{position:relative;padding:10px 12px 6px}
+.search .inp{padding-left:46px;padding-right:48px;height:50px}
+.search .si{position:absolute;left:24px;top:22px;color:var(--dim)}
+.search .ib{position:absolute;right:12px;top:11px;width:48px;height:48px;color:var(--dim)}
+.chips{display:flex;gap:8px;padding:6px 12px 10px;overflow-x:auto;border-bottom:1px solid var(--line);flex:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:20px;background:none;color:var(--dim)}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#02122a;font-weight:600}
+.list{flex:1;min-height:0;overflow-y:auto}
+.row{display:flex;align-items:center;gap:14px;width:100%;min-height:70px;padding:10px 14px;background:none;border:0;border-bottom:1px solid var(--line);text-align:left}
+.row:active{background:var(--bg2)}
+.av{flex:none;width:44px;height:44px;border:1px solid var(--line2);border-radius:8px;display:grid;place-items:center;font-weight:700;color:var(--acc);font-size:19px}
+.rt{flex:1;min-width:0}
+.rt b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim);font-size:14px}
+.tag{flex:none;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{padding:40px 24px;text-align:center;color:var(--dim)}
+.banner{margin:0;padding:10px 14px;border:0;border-bottom:1px solid var(--line);border-left:3px solid var(--warn);background:none;text-align:left;width:100%;color:var(--txt);font-size:14px}
+.dv{padding:12px 0;border-bottom:1px solid var(--line)}
+.dv .v{display:flex;align-items:center;gap:8px}
+.dv .t{flex:1;min-width:0;word-break:break-all;white-space:pre-wrap;font-size:18px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.03em}
+.d{color:var(--acc)}.s{color:var(--warn)}
+.gen{margin:0 0 18px;padding:14px 0 4px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.gen .out{min-height:56px;padding:12px 0;font-size:20px;word-break:break-all}
+.gen .two{display:flex;gap:8px;margin:6px 0 10px}
+.set{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:8px 4px;background:none;border:0;border-bottom:1px solid var(--line);text-align:left}
+.set:active{background:var(--bg2)}
+.set .tx{flex:1}.set small{display:block;color:var(--dim);font-size:13px}
+.set.bad{color:var(--bad)}
+.ovl{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;background:rgba(2,6,14,.86)}
+.dlg{width:100%;max-height:92%;overflow-y:auto;padding:20px 16px calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--acc)}
+.dlg h2{margin:0 0 10px;font-size:19px}
+.dlg p{margin:0 0 14px;color:var(--dim)}
+.dbtn{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+#toast{position:fixed;left:16px;right:16px;top:calc(env(safe-area-inset-top) + 12px);padding:12px 16px;background:var(--bg2);border:1px solid var(--acc);border-radius:8px;text-align:center;font-size:15px;display:none;z-index:9}
+p.t{margin:0 0 12px;color:var(--dim);font-size:15px}
+.sec{margin:22px 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+ul.pl{margin:0 0 12px;padding-left:20px;color:var(--dim);font-size:15px}
+ul.pl li{margin-bottom:6px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="dlg"></div>
+<div id="toast"></div>
+<script>
+'use strict';
+/*CRYPTO-BEGIN*/
+// ---- Шифрование: только встроенный Web Crypto API ----
+const KDF_ITER = 600000;          // число итераций PBKDF2-SHA256
+const KDF_MIN = 600000, KDF_MAX = 5000000;
+const _enc = new TextEncoder(), _dec = new TextDecoder();
+
+function toB64(u8) {
+  let s = '';
+  for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+function fromB64(str) {
+  const s = atob(str), u = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+  return u;
+}
+function rndBytes(n) { return crypto.getRandomValues(new Uint8Array(n)); }
+
+async function deriveKey(password, salt, iter) {
+  const base = await crypto.subtle.importKey('raw', _enc.encode(String(password).normalize('NFKC')), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256' },
+    base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+function aadFor(iter) { return _enc.encode('sejf|1|PBKDF2-SHA256|AES-256-GCM|' + iter); }
+
+// Проверка структуры файла/хранилища. Бросает Error('FORMAT').
+function checkBlob(b) {
+  try {
+    if (!b || typeof b !== 'object' || b.v !== 1 || b.kdf !== 'PBKDF2-SHA256') throw 0;
+    if (!Number.isInteger(b.iter) || b.iter < KDF_MIN || b.iter > KDF_MAX) throw 0;
+    if (typeof b.salt !== 'string' || typeof b.iv !== 'string' || typeof b.ct !== 'string') throw 0;
+    if (fromB64(b.salt).length !== 16 || fromB64(b.iv).length !== 12 || fromB64(b.ct).length < 17) throw 0;
+  } catch (e) { throw new Error('FORMAT'); }
+}
+
+// Шифрует объект. Для каждого сохранения новый случайный IV.
+async function sealData(obj, key, salt, iter) {
+  const iv = rndBytes(12);
+  const ct = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv, additionalData: aadFor(iter), tagLength: 128 },
+    key, _enc.encode(JSON.stringify(obj)));
+  return { app: 'sejf', v: 1, kdf: 'PBKDF2-SHA256', iter: iter, salt: toB64(salt), iv: toB64(iv), ct: toB64(new Uint8Array(ct)) };
+}
+// Расшифровывает. Неверный ключ или любое повреждение -> Error('AUTH').
+async function openData(blob, key) {
+  checkBlob(blob);
+  let pt;
+  try {
+    pt = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: fromB64(blob.iv), additionalData: aadFor(blob.iter), tagLength: 128 },
+      key, fromB64(blob.ct));
+  } catch (e) { throw new Error('AUTH'); }
+  try { return JSON.parse(_dec.decode(pt)); } catch (e) { throw new Error('AUTH'); }
+}
+async function createVault(password, data) {
+  const salt = rndBytes(16), iter = KDF_ITER;
+  const key = await deriveKey(password, salt, iter);
+  const blob = await sealData(data, key, salt, iter);
+  return { blob: blob, key: key, salt: salt, iter: iter, data: data };
+}
+// Проверка пароля = попытка расшифровки.
+async function unlockVault(password, blob) {
+  checkBlob(blob);
+  const salt = fromB64(blob.salt);
+  const key = await deriveKey(password, salt, blob.iter);
+  const data = await openData(blob, key);
+  if (!data || !Array.isArray(data.entries)) throw new Error('AUTH');
+  return { key: key, salt: salt, iter: blob.iter, data: data };
+}
+/*CRYPTO-END*/
+
+/*UTIL-BEGIN*/
+// ---- Генератор паролей (crypto.getRandomValues, без смещения) ----
+function randInt(max) {
+  const lim = Math.floor(0x100000000 / max) * max, a = new Uint32Array(1);
+  do { crypto.getRandomValues(a); } while (a[0] >= lim);
+  return a[0] % max;
+}
+const SETS = {
+  lower: 'abcdefghijklmnopqrstuvwxyz',
+  upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  digits: '0123456789',
+  symbols: '!@#$%^&*-_=+?.,:;()[]{}'
+};
+const SIMILAR = 'O0oIl1|';
+function generatePassword(o) {
+  const sets = [];
+  for (const k of ['lower', 'upper', 'digits', 'symbols']) {
+    if (!o[k]) continue;
+    let s = SETS[k];
+    if (o.nosim) s = s.split('').filter(c => SIMILAR.indexOf(c) < 0).join('');
+    if (s) sets.push(s);
+  }
+  if (!sets.length) sets.push(o.nosim ? SETS.lower.replace(/o|l/g, '') : SETS.lower);
+  const len = Math.max(sets.length, Math.min(128, o.len | 0));
+  const all = sets.join('');
+  const out = [];
+  for (const s of sets) out.push(s[randInt(s.length)]);       // минимум по одному из каждого набора
+  while (out.length < len) out.push(all[randInt(all.length)]);
+  for (let i = out.length - 1; i > 0; i--) { const j = randInt(i + 1); const t = out[i]; out[i] = out[j]; out[j] = t; }
+  return out.join('');
+}
+function genBits(o) {
+  let n = 0;
+  for (const k of ['lower', 'upper', 'digits', 'symbols']) if (o[k]) { let s = SETS[k]; if (o.nosim) s = s.split('').filter(c => SIMILAR.indexOf(c) < 0).join(''); n += s.length; }
+  return Math.round(o.len * Math.log2(n || 26));
+}
+
+// ---- Оценка надёжности мастер-пароля (консервативная, в битах) ----
+const ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', 'йцукенгшщзхъ', 'фывапролджэ', 'ячсмитьбю', '1234567890'];
+const COMMON = ['password', 'qwerty', 'пароль', 'йцукен', '123456', 'admin', 'letmein', '111111', 'qazwsx', 'iloveyou', 'master', 'welcome', 'abc123', '000000'];
+function passwordBits(pw) {
+  if (!pw) return 0;
+  const ch = Array.from(pw), low = pw.toLowerCase(), lc = Array.from(low);
+  let pool = 0;
+  if (/[a-z]/.test(pw)) pool += 26;
+  if (/[A-Z]/.test(pw)) pool += 26;
+  if (/[0-9]/.test(pw)) pool += 10;
+  if (/[а-яё]/.test(pw)) pool += 33;
+  if (/[А-ЯЁ]/.test(pw)) pool += 33;
+  const hasSym = /[^a-zA-Z0-9а-яА-ЯёЁ\s]/.test(pw);
+  if (hasSym) pool += 33;
+  const mark = new Array(lc.length).fill(false);
+  for (let i = 0; i + 2 < lc.length; i++) {
+    const a = lc[i].codePointAt(0), b = lc[i + 1].codePointAt(0), c = lc[i + 2].codePointAt(0);
+    if ((b - a === 1 && c - b === 1) || (a - b === 1 && b - c === 1)) mark[i] = mark[i + 1] = mark[i + 2] = true;
+    const tri = lc[i] + lc[i + 1] + lc[i + 2];
+    for (const r of ROWS) { if (r.indexOf(tri) >= 0 || r.split('').reverse().join('').indexOf(tri) >= 0) mark[i] = mark[i + 1] = mark[i + 2] = true; }
+  }
+  const seen = new Set();
+  let eff = 0;
+  for (let i = 0; i < ch.length; i++) {
+    if (mark[i] || seen.has(ch[i])) eff += 0.25; else { seen.add(ch[i]); eff += 1; }
+  }
+  let per = Math.log2(pool || 1);
+  const onlyLetters = !/[0-9]/.test(pw) && !hasSym;
+  if (onlyLetters) per = Math.min(per, 3.6);       // текст из букв предсказуемее случайных символов
+  let bits = eff * per;
+  for (const w of COMMON) if (low.indexOf(w) >= 0) { bits = Math.min(bits, 28); break; }
+  return Math.round(bits);
+}
+function strengthLevel(bits, pw) {
+  const len = Array.from(pw || '').length;
+  let n = 1, text = 'Слабый';
+  if (bits >= 75) { n = 4; text = 'Отличный'; }
+  else if (bits >= 55) { n = 3; text = 'Хороший'; }
+  else if (bits >= 40) { n = 2; text = 'Средний'; }
+  return { n: n, text: text, ok: bits >= 55 && len >= 10 };
+}
+
+// ---- Слияние записей при импорте ----
+function mergeEntries(cur, inc) {
+  const out = cur.slice();
+  let added = 0, updated = 0;
+  for (const e of inc) {
+    const i = out.findIndex(x => x.id === e.id);
+    if (i >= 0) { if ((e.updated || 0) > (out[i].updated || 0)) { out[i] = e; updated++; } continue; }
+    const dup = out.some(x => x.title === e.title && x.login === e.login && x.password === e.password);
+    if (!dup) { out.push(e); added++; }
+  }
+  return { entries: out, added: added, updated: updated };
+}
+// ---- Категории ----
+function normCat(n) { return String(n || '').replace(/\s+/g, ' ').trim().slice(0, 30); }
+function catIndex(list, name) {
+  const k = normCat(name).toLocaleLowerCase('ru');
+  return list.findIndex(c => normCat(c).toLocaleLowerCase('ru') === k);
+}
+function mergeCats(a, b) {
+  const out = (a || []).slice();
+  for (const c of (b || [])) if (typeof c === 'string' && normCat(c) && catIndex(out, c) < 0) out.push(normCat(c));
+  return out;
+}
+function plural(n) {
+  const m10 = n % 10, m100 = n % 100;
+  const w = (m10 === 1 && m100 !== 11) ? 'запись' : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) ? 'записи' : 'записей';
+  return n + ' ' + w;
+}
+function uid() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return Array.from(rndBytes(16)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+/*UTIL-END*/
+
+// =====================  ПРИЛОЖЕНИЕ  =====================
+const VERSION = '1.1';
+const LS = { vault: 'sejf.vault.v1', guard: 'sejf.guard', meta: 'sejf.meta', gen: 'sejf.gen' };
+const DEF_CATS = ['Общее', 'Почта', 'Соцсети', 'Банки и финансы', 'Покупки', 'Работа', 'Развлечения', 'Другое'];
+const LOCK_MS = 60000, CLIP_SEC = 30, GRACE_MS = 180000;
+const S = { key: null, salt: null, iter: 0, data: null, q: '', cat: '', stack: [], shown: null, shownDlg: null, graceUntil: 0, hiddenAt: 0, tick: 0 };
+
+const $ = id => document.getElementById(id);
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { } }
+function jget(k, d) { try { const v = JSON.parse(lsGet(k)); return v && typeof v === 'object' ? v : d; } catch (e) { return d; } }
+function hasVault() { return lsGet(LS.vault) !== null; }
+
+const ICONS = {
+  lock: '<path d="M6 11h12v9H6z"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeoff: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  search: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  chev: '<path d="M9 5l7 7-7 7"/>',
+  refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  trash: '<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>'
+};
+
+// ---------- мелкие помощники ----------
+function h(tag, a) {
+  const e = document.createElement(tag);
+  if (a) for (const k in a) {
+    const v = a[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, '');
+    else e.setAttribute(k, v);
+  }
+  for (let i = 2; i < arguments.length; i++) {
+    const kids = [].concat(arguments[i]);
+    for (const c of kids) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  return e;
+}
+function ico(n) { const s = h('span', { class: 'ic' }); s.innerHTML = '<svg viewBox="0 0 24 24">' + ICONS[n] + '</svg>'; return s; }
+function btn(text, cls, fn, icon) { return h('button', { type: 'button', class: 'btn ' + (cls || ''), onclick: fn }, icon ? ico(icon) : null, text); }
+function ibtn(icon, label, fn) { return h('button', { type: 'button', class: 'ib', 'aria-label': label, onclick: fn }, ico(icon)); }
+function field(label, input, extra) { return h('div', { class: 'fld' }, h('label', { class: 'lb' }, label), input, extra); }
+function textInp(val, ph) {
+  const i = h('input', { type: 'text', class: 'inp', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false', placeholder: ph || '' });
+  i.value = val || ''; return i;
+}
+function pwBox(ph, oninput) {
+  const inp = h('input', { type: 'password', class: 'inp', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false', placeholder: ph || '', oninput: oninput });
+  const eye = h('button', { type: 'button', class: 'eye', 'aria-label': 'Показать или скрыть пароль' }, ico('eye'));
+  eye.addEventListener('click', () => {
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    eye.replaceChildren(ico(show ? 'eyeoff' : 'eye'));
+  });
+  return { wrap: h('div', { class: 'pw' }, inp, eye), inp: inp };
+}
+function meter(getPw) {
+  const segs = [0, 1, 2, 3].map(() => h('i'));
+  const lab = h('span', { class: 'ml' });
+  const node = h('div', { class: 'meter' }, h('div', { class: 'segs' }, segs), lab);
+  function upd() {
+    const pw = getPw(), b = passwordBits(pw), lv = strengthLevel(b, pw);
+    segs.forEach((s, i) => { s.className = pw && i < lv.n ? 'l' + lv.n : ''; });
+    lab.textContent = pw ? lv.text + ' (оценка ≈ ' + b + ' бит)' : '';
+    return lv;
+  }
+  return { node: node, upd: upd };
+}
+function colorize(pw) {
+  const f = document.createDocumentFragment();
+  for (const c of pw) {
+    if (/[0-9]/.test(c)) f.append(h('span', { class: 'd' }, c));
+    else if (/[^a-zA-Zа-яА-ЯёЁ]/.test(c)) f.append(h('span', { class: 's' }, c));
+    else f.append(c);
+  }
+  return f;
+}
+let toastT = 0;
+function toast(t, ms) {
+  const el = $('toast'); el.textContent = t; el.style.display = 'block';
+  clearTimeout(toastT); toastT = setTimeout(() => { el.style.display = 'none'; }, ms || 2600);
+}
+function fmtDate(ts) { return new Date(ts).toLocaleDateString('ru-RU'); }
+function fmtWait(s) { return s >= 60 ? Math.floor(s / 60) + ' мин ' + (s % 60) + ' с' : s + ' с'; }
+function sleepFrame() { return new Promise(r => setTimeout(r, 30)); }
+
+// ---------- навигация (кнопка «Назад» Android) ----------
+function go(name, p) {
+  S.stack.push({ n: name, p: p || {} });
+  history.pushState({ d: S.stack.length }, '');
+  render();
+}
+function backN(n) { history.go(-(n || 1)); }
+function resetTo(page) {
+  const n = S.stack.length - 1;
+  S.stack = [{ n: page, p: {} }]; S.shown = null; S.shownDlg = null;
+  $('dlg').replaceChildren();
+  render();
+  if (n > 0) history.go(-n);
+}
+window.addEventListener('popstate', e => {
+  const d = (e.state && e.state.d) || 1;
+  if (d < S.stack.length) S.stack.length = d;
+  render();
+});
+function dialog(title, nodes, buttons) {
+  const item = {
+    n: 'dlg', build() {
+      return h('div', { class: 'ovl' }, h('div', { class: 'dlg' }, h('h2', {}, title), nodes,
+        h('div', { class: 'dbtn' }, buttons.map(b => btn(b.t, b.cls, ev => b.fn(() => backN(1), ev.currentTarget))))));
+    }
+  };
+  $('toast').style.display = 'none';
+  S.stack.push(item);
+  history.pushState({ d: S.stack.length }, '');
+  render();
+  const i = $('dlg').querySelector('input,textarea'); if (i) i.focus();
+}
+
+const SCREENS = {};
+function render(force) {
+  if (S.tick) { clearInterval(S.tick); S.tick = 0; }
+  let page = null;
+  for (let i = S.stack.length - 1; i >= 0; i--) if (S.stack[i].n !== 'dlg') { page = S.stack[i]; break; }
+  if (!page) return;
+  if (force || S.shown !== page) {
+    const app = $('app');
+    const old = S.shown && S.shown.n === 'list' ? app.querySelector('.list') : null;
+    if (old) S.listScroll = old.scrollTop;
+    app.replaceChildren(SCREENS[page.n](page.p || {}));
+    S.shown = page;
+    if (page.n === 'list' && S.listScroll) { const l = app.querySelector('.list'); if (l) l.scrollTop = S.listScroll; }
+  }
+  const top = S.stack[S.stack.length - 1];
+  const want = top.n === 'dlg' ? top : null;
+  if (want !== S.shownDlg) { $('dlg').replaceChildren(want ? want.build() : ''); S.shownDlg = want; }
+}
+
+// ---------- защита от подбора ----------
+function guardGet() { const g = jget(LS.guard, { fails: 0, until: 0 }); if (g.until - Date.now() > 900000) g.until = Date.now() + 900000; return g; }
+function guardFail() {
+  const g = guardGet(); g.fails++;
+  const d = g.fails < 3 ? 0 : Math.min(900, 5 * Math.pow(2, g.fails - 3));
+  g.until = d ? Date.now() + d * 1000 : 0; lsSet(LS.guard, JSON.stringify(g)); return g;
+}
+function guardOk() { lsDel(LS.guard); }
+
+// ---------- сохранение ----------
+async function save() {
+  const blob = await sealData(S.data, S.key, S.salt, S.iter);
+  if (!lsSet(LS.vault, JSON.stringify(blob))) throw new Error('STORE');
+  const m = jget(LS.meta, {}); m.dirty = true; lsSet(LS.meta, JSON.stringify(m));
+}
+function startSession(r) {
+  ensureCats(r.data);
+  S.key = r.key; S.salt = r.salt; S.iter = r.iter; S.data = r.data; S.q = ''; S.cat = ''; S.listScroll = 0;
+  resetTo('list');
+}
+function lock() {
+  S.key = null; S.salt = null; S.data = null; S.q = ''; S.cat = ''; S.graceUntil = 0;
+  try { if (window.VaultNative) window.VaultNative.clearNow(); } catch (e) { }
+  $('toast').style.display = 'none';
+  resetTo(hasVault() ? 'unlock' : 'setup');
+}
+function entryById(id) { return S.data.entries.find(e => e.id === id); }
+// Список категорий хранится внутри зашифрованного хранилища (data.cats).
+function ensureCats(d) {
+  d.cats = Array.isArray(d.cats) ? mergeCats([], d.cats) : DEF_CATS.slice();
+  if (!d.cats.length) d.cats.push('Общее');
+  for (const e of d.entries) {
+    e.cat = normCat(e.cat) || d.cats[0];
+    if (catIndex(d.cats, e.cat) < 0) d.cats.push(e.cat);
+  }
+}
+function allCats() { return S.data.cats; }
+// Изменение данных с откатом, если сохранить не удалось
+async function mutate(fn) {
+  const snap = JSON.stringify(S.data);
+  fn();
+  try { await save(); return true; } catch (e) { S.data = JSON.parse(snap); return false; }
+}
+
+// ---------- буфер обмена ----------
+let clipT = 0;
+function copySecret(text, what) {
+  if (window.VaultNative && window.VaultNative.copy) {
+    try { window.VaultNative.copy(String(text), CLIP_SEC); toast(what + ' скопирован. Буфер очистится через ' + CLIP_SEC + ' с'); return; } catch (e) { }
+  }
+  const done = () => {
+    toast(what + ' скопирован. Буфер очистится через ' + CLIP_SEC + ' с');
+    clearTimeout(clipT); clipT = setTimeout(() => { try { navigator.clipboard.writeText(' '); } catch (e) { } }, CLIP_SEC * 1000);
+  };
+  try { navigator.clipboard.writeText(String(text)).then(done, () => toast('Не удалось скопировать')); } catch (e) { toast('Не удалось скопировать'); }
+}
+
+// ---------- автоблокировка ----------
+function checkResume(ms) {
+  if (S.key && ms >= LOCK_MS && Date.now() > S.graceUntil) lock();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    S.hiddenAt = Date.now();
+    setTimeout(() => { if (document.hidden && S.key && Date.now() > S.graceUntil) lock(); }, LOCK_MS + 500);
+  } else {
+    if (S.hiddenAt) checkResume(Date.now() - S.hiddenAt);
+    S.hiddenAt = 0;
+  }
+});
+window.__resumed = ms => checkResume(ms);   // вызывается из Android-кода
+
+// =====================  ЭКРАНЫ  =====================
+function header(title, sub, noBack) {
+  return h('div', { class: 'hd' }, noBack ? null : ibtn('back', 'Назад', () => backN(1)),
+    h('div', { style: 'flex:1;min-width:0' }, h('h1', {}, title), sub ? h('div', { class: 'sub' }, sub) : null));
+}
+function logo() { const d = h('div', { class: 'logo' }); d.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 11h12v9H6z"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 14.5v2.5"/></svg>'; return d; }
+
+// ---- Первый запуск ----
+SCREENS.setup = function () {
+  const p1 = pwBox('Мастер-пароль', upd), p2 = pwBox('Повторите пароль', upd);
+  const m = meter(() => p1.inp.value);
+  const chk = h('input', { type: 'checkbox', onchange: upd });
+  const msg = h('div', { class: 'msg' });
+  const go1 = btn('Создать сейф', 'pri', create); go1.disabled = true;
+  function upd() {
+    const lv = m.upd(), a = p1.inp.value, b = p2.inp.value;
+    let t = '';
+    if (a && !lv.ok) t = 'Пароль слишком простой. Нужно не меньше 10 символов и уровень «Хороший». Лучше фраза из 4–5 слов.';
+    else if (b && a !== b) t = 'Пароли не совпадают';
+    msg.textContent = t;
+    go1.disabled = !(lv.ok && a === b && chk.checked);
+  }
+  async function create() {
+    go1.disabled = true; go1.textContent = 'Создание…'; await sleepFrame();
+    try {
+      const r = await createVault(p1.inp.value, { entries: [] });
+      if (!lsSet(LS.vault, JSON.stringify(r.blob))) throw new Error('STORE');
+      guardOk(); startSession(r);
+      toast('Сейф создан');
+    } catch (e) {
+      msg.textContent = 'Не удалось создать сейф: ' + (e.message === 'STORE' ? 'нет места или запрещено хранение' : 'ошибка шифрования');
+      go1.textContent = 'Создать сейф'; upd();
+    }
+  }
+  return h('div', { class: 'scr grid' },
+    h('div', { class: 'body' }, logo(), h('h2', { class: 'h2' }, 'Сейф паролей'), h('p', { class: 'lead' }, 'Придумайте мастер-пароль'),
+      h('div', { class: 'note warn' }, h('b', {}, 'Восстановить мастер-пароль невозможно. '), 'Если вы его забудете, все записи пропадут навсегда: у приложения нет почты, сервера и «сброса». Запишите его на бумаге и храните дома.'),
+      field('Мастер-пароль', p1.wrap, m.node), field('Ещё раз', p2.wrap), msg,
+      h('label', { class: 'chk' }, chk, h('i'), h('span', {}, 'Я понимаю, что без мастер-пароля данные не вернуть')),
+      h('div', { style: 'height:12px' }), go1,
+      h('div', { style: 'height:10px' }),
+      btn('У меня есть резервная копия', 'ghost', () => pickFile(t => startImport(t, 'restore')))));
+};
+
+// ---- Вход ----
+SCREENS.unlock = function () {
+  const pw = pwBox('Мастер-пароль');
+  const msg = h('div', { class: 'msg' });
+  const go1 = btn('Открыть', 'pri', null);
+  let busy = false, waiting = false;
+  const form = h('form', { autocomplete: 'off', onsubmit: e => { e.preventDefault(); attempt(); } }, pw.wrap, msg, h('button', { type: 'submit', style: 'display:none' }));
+  go1.addEventListener('click', attempt);
+  function tick() {
+    const left = Math.ceil((guardGet().until - Date.now()) / 1000);
+    if (left > 0) { waiting = true; go1.disabled = true; msg.textContent = 'Слишком много неверных попыток. Подождите ' + fmtWait(left); }
+    else if (waiting) { waiting = false; if (!busy) go1.disabled = false; msg.textContent = ''; }
+  }
+  async function attempt() {
+    if (busy || waiting || !pw.inp.value) return;
+    busy = true; go1.disabled = true; go1.textContent = 'Проверка…'; msg.textContent = ''; await sleepFrame();
+    let blob = null;
+    try { blob = JSON.parse(lsGet(LS.vault)); } catch (e) { }
+    try {
+      const r = await unlockVault(pw.inp.value, blob);
+      guardOk();
+      if (r.iter < KDF_ITER) await upgradeKdf(pw.inp.value, r);
+      startSession(r); return;
+    } catch (e) {
+      if (e.message === 'FORMAT') msg.textContent = 'Файл хранилища повреждён. Нажмите «Забыли пароль?», сбросьте сейф и восстановите его из резервной копии.';
+      else { const g = guardFail(); msg.textContent = 'Неверный пароль (или данные повреждены).' + (g.fails >= 3 ? ' Попыток подряд: ' + g.fails + '.' : ''); }
+    }
+    pw.inp.value = ''; busy = false; go1.textContent = 'Открыть'; go1.disabled = false; tick();
+  }
+  async function upgradeKdf(password, r) {
+    try { const n = await createVault(password, r.data); await sleepFrame(); lsSet(LS.vault, JSON.stringify(n.blob)); r.key = n.key; r.salt = n.salt; r.iter = n.iter; } catch (e) { }
+  }
+  S.tick = setInterval(tick, 500); tick();
+  return h('div', { class: 'scr grid' },
+    h('div', { class: 'body' }, logo(), h('h2', { class: 'h2' }, 'Сейф паролей'), h('p', { class: 'lead' }, 'Введите мастер-пароль'), form,
+      go1, h('div', { style: 'height:10px' }), btn('Забыли пароль?', 'ghost', openReset)));
+};
+function openReset() {
+  const inp = textInp('', 'Введите слово УДАЛИТЬ');
+  dialog('Забыли мастер-пароль?', [
+    h('p', {}, 'Восстановить пароль невозможно: данные зашифрованы им. Единственный выход: стереть сейф и загрузить резервную копию (понадобится пароль от неё).'),
+    h('div', { class: 'fld' }, inp)], [
+    { t: 'Стереть сейф', cls: 'bad', fn: close => { if (inp.value.trim().toUpperCase() !== 'УДАЛИТЬ') { toast('Введите слово УДАЛИТЬ'); return; } wipeAll(); } },
+    { t: 'Отмена', fn: close => close() }]);
+}
+function wipeAll() { lsDel(LS.vault); lsDel(LS.guard); lsDel(LS.meta); lock(); }
+
+// ---- Список ----
+function backupDue() {
+  if (!S.data.entries.length) return '';
+  const m = jget(LS.meta, {});
+  if (!m.last) return 'Резервной копии ещё нет. Сделайте её: при потере телефона пароли не вернуть.';
+  if (m.dirty && Date.now() - m.last > 7 * 86400000) return 'Копия от ' + fmtDate(m.last) + ' устарела. Обновите её.';
+  return '';
+}
+SCREENS.list = function () {
+  const q = h('input', { type: 'text', class: 'inp', placeholder: 'Поиск', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false' });
+  q.value = S.q;
+  const clr = ibtn('x', 'Очистить', () => { q.value = ''; S.q = ''; refresh(); q.focus(); });
+  const chips = h('div', { class: 'chips' });
+  const list = h('div', { class: 'list' });
+  q.addEventListener('input', () => { S.q = q.value; refresh(); });
+  function filtered() {
+    const s = S.q.trim().toLocaleLowerCase('ru');
+    return S.data.entries.filter(e => (!S.cat || e.cat === S.cat) &&
+      (!s || [e.title, e.login, e.url, e.note, e.cat].some(x => (x || '').toLocaleLowerCase('ru').indexOf(s) >= 0)))
+      .sort((a, b) => a.title.localeCompare(b.title, 'ru'));
+  }
+  function refresh() {
+    clr.style.display = S.q ? '' : 'none';
+    const cats = S.data.cats;
+    if (S.cat && catIndex(cats, S.cat) < 0) S.cat = '';
+    chips.replaceChildren(h('button', { class: 'chip' + (S.cat ? '' : ' on'), onclick: () => { S.cat = ''; refresh(); } }, 'Все'),
+      ...cats.map(c => h('button', { class: 'chip' + (S.cat === c ? ' on' : ''), onclick: () => { S.cat = c; refresh(); } }, c)),
+      h('button', { class: 'chip', onclick: () => newCatDialog(name => { S.cat = name; }) }, '＋ Группа'));
+    const items = filtered();
+    if (!items.length) {
+      list.replaceChildren(h('div', { class: 'empty' }, S.data.entries.length ? 'Ничего не найдено' : 'Записей пока нет. Нажмите «Добавить», чтобы создать первую.'));
+      return;
+    }
+    const f = document.createDocumentFragment();
+    for (const e of items) f.append(h('button', { class: 'row', onclick: () => go('detail', { id: e.id }) },
+      h('div', { class: 'av' }, (e.title || '?').trim().charAt(0).toUpperCase()),
+      h('div', { class: 'rt' }, h('b', {}, e.title), h('span', {}, e.login || e.url || '—')),
+      h('div', { class: 'tag' }, e.cat), ico('chev')));
+    list.replaceChildren(f);
+  }
+  refresh();
+  const due = backupDue();
+  return h('div', { class: 'scr' },
+    h('div', { class: 'hd' }, h('div', { style: 'flex:1' }, h('h1', {}, 'Сейф'), h('div', { class: 'sub' }, 'Записей: ' + S.data.entries.length))),
+    due ? h('button', { class: 'banner', onclick: () => go('backup') }, due) : null,
+    h('div', { class: 'search' }, h('span', { class: 'si' }, ico('search')), q, clr), chips, list,
+    h('div', { class: 'bar' },
+      btn('', 'sq', () => { lock(); }, 'lock'),
+      btn('Добавить', 'pri w2', () => go('edit', {}), 'plus'),
+      btn('', 'sq', () => go('settings'), 'menu')));
+};
+
+// ---- Просмотр записи ----
+SCREENS.detail = function (p) {
+  const e = entryById(p.id);
+  if (!e) { setTimeout(() => backN(1), 0); return h('div'); }
+  function row(label, valueNode, copyWhat, copyVal, extra) {
+    return h('div', { class: 'dv' }, h('div', { class: 'lb' }, label),
+      h('div', { class: 'v' }, valueNode, extra || null,
+        copyVal ? h('button', { class: 'ib', 'aria-label': 'Копировать', onclick: () => copySecret(copyVal, copyWhat) }, ico('copy')) : null));
+  }
+  const body = h('div', { class: 'body' });
+  body.append(row('Название', h('div', { class: 't' }, e.title)));
+  if (e.login) body.append(row('Логин', h('div', { class: 't' }, e.login), 'Логин', e.login));
+  if (e.password) {
+    const t = h('div', { class: 't mono' }, '••••••••••••');
+    let shown = false;
+    const eye = h('button', { class: 'ib', 'aria-label': 'Показать пароль' }, ico('eye'));
+    eye.addEventListener('click', () => {
+      shown = !shown; t.replaceChildren(shown ? colorize(e.password) : '••••••••••••'); eye.replaceChildren(ico(shown ? 'eyeoff' : 'eye'));
+    });
+    body.append(row('Пароль', t, 'Пароль', e.password, eye));
+  }
+  if (e.url) body.append(row('Сайт', h('div', { class: 't' }, e.url), 'Адрес', e.url));
+  body.append(row('Категория', h('div', { class: 't' }, e.cat)));
+  if (e.note) body.append(row('Заметка', h('div', { class: 't' }, e.note), 'Заметка', e.note));
+  body.append(h('p', { class: 't', style: 'margin-top:14px' }, 'Изменено: ' + fmtDate(e.updated || e.created || Date.now())));
+  return h('div', { class: 'scr' }, header('Запись'), body,
+    h('div', { class: 'bar' },
+      btn('Удалить', 'bad', () => confirmDelete(e), 'trash'),
+      btn('Изменить', 'pri', () => go('edit', { id: e.id }), 'edit')));
+};
+function confirmDelete(e) {
+  dialog('Удалить запись?', [h('p', {}, '«' + e.title + '» будет удалена. Отменить это нельзя.')], [
+    {
+      t: 'Удалить', cls: 'bad', fn: async close => {
+        S.data.entries = S.data.entries.filter(x => x.id !== e.id);
+        try { await save(); } catch (er) { toast('Не удалось сохранить'); return; }
+        backN(2);                                 // закрыть окно и карточку, вернуться к списку
+      }
+    },
+    { t: 'Отмена', fn: close => close() }]);
+}
+
+// ---- Форма записи + генератор ----
+SCREENS.edit = function (p) {
+  const ex = p.id ? entryById(p.id) : null;
+  const f = ex || { title: '', login: '', password: '', url: '', note: '', cat: S.cat || (catIndex(S.data.cats, 'Общее') >= 0 ? 'Общее' : S.data.cats[0]) };
+  const iTitle = textInp(f.title, 'Например: Почта'), iLogin = textInp(f.login, 'Логин или e-mail'), iUrl = textInp(f.url, 'example.com');
+  iUrl.setAttribute('inputmode', 'url');
+  const pw = pwBox('Пароль'); pw.inp.value = f.password;
+  const note = h('textarea', { class: 'inp', placeholder: 'Заметка', spellcheck: 'false', autocomplete: 'off' }); note.value = f.note;
+  const cats = allCats();
+  const sel = h('select', { class: 'inp' }, cats.map(c => h('option', { value: c }, c)), h('option', { value: '__new' }, '＋ Новая категория…'));
+  sel.value = cats.indexOf(f.cat) >= 0 ? f.cat : cats[0];
+  const newCat = textInp('', 'Название категории'); newCat.style.display = 'none'; newCat.style.marginTop = '8px';
+  sel.addEventListener('change', () => { newCat.style.display = sel.value === '__new' ? '' : 'none'; if (sel.value === '__new') newCat.focus(); });
+  const msg = h('div', { class: 'msg' });
+
+  // генератор
+  const st = Object.assign({ len: 20, lower: true, upper: true, digits: true, symbols: true, nosim: true }, jget(LS.gen, {}));
+  const out = h('div', { class: 'out mono' });
+  const info = h('div', { class: 'ml' });
+  const lenLab = h('span', {});
+  const range = h('input', { type: 'range', min: 8, max: 64, step: 1, style: 'width:100%;height:44px;accent-color:#27b4ff' });
+  range.value = st.len;
+  let cur = '';
+  function gen() {
+    if (!st.lower && !st.upper && !st.digits && !st.symbols) { st.lower = true; chks.lower.checked = true; }
+    st.len = +range.value; lenLab.textContent = 'Длина: ' + st.len;
+    cur = generatePassword(st); out.replaceChildren(colorize(cur));
+    info.textContent = 'Стойкость ≈ ' + genBits(st) + ' бит';
+    lsSet(LS.gen, JSON.stringify(st));
+  }
+  range.addEventListener('input', gen);
+  const chks = {};
+  function chk(key, label) {
+    const i = h('input', { type: 'checkbox' }); i.checked = !!st[key]; chks[key] = i;
+    i.addEventListener('change', () => { st[key] = i.checked; gen(); });
+    return h('label', { class: 'chk' }, i, h('i'), h('span', {}, label));
+  }
+  const panel = h('div', { class: 'gen' }, out, info,
+    h('div', { class: 'two' }, btn('Обновить', 'sm', gen, 'refresh'), btn('Подставить', 'pri sm', () => { pw.inp.value = cur; pw.inp.type = 'text'; panel.style.display = 'none'; toast('Пароль подставлен'); })),
+    lenLab, range,
+    chk('lower', 'Строчные буквы a–z'), chk('upper', 'Заглавные буквы A–Z'), chk('digits', 'Цифры 0–9'), chk('symbols', 'Символы !@#$%'), chk('nosim', 'Исключить похожие (0 O o, 1 l I |)'));
+  panel.style.display = 'none';
+  const gbtn = btn('Генератор паролей', 'sm', () => { const open = panel.style.display === 'none'; panel.style.display = open ? '' : 'none'; if (open) gen(); }, 'refresh');
+  gbtn.style.margin = '0 0 18px'; gbtn.style.width = '100%';
+
+  async function saveIt() {
+    const title = iTitle.value.trim();
+    if (!title) { msg.textContent = 'Введите название'; iTitle.focus(); return; }
+    let cat = sel.value === '__new' ? normCat(newCat.value) : sel.value;
+    if (!cat) cat = S.data.cats[0];
+    const ci = catIndex(S.data.cats, cat);
+    let addedCat = false;
+    if (ci >= 0) cat = S.data.cats[ci]; else { S.data.cats.push(cat); addedCat = true; }
+    const now = Date.now();
+    const rec = ex || { id: uid(), created: now };
+    const backup = JSON.stringify(rec);
+    rec.title = title; rec.login = iLogin.value.trim(); rec.password = pw.inp.value; rec.url = iUrl.value.trim(); rec.note = note.value; rec.cat = cat; rec.updated = now;
+    if (!ex) S.data.entries.push(rec);
+    try { await save(); } catch (e) {
+      if (ex) Object.assign(rec, JSON.parse(backup)); else S.data.entries.pop();
+      if (addedCat) S.data.cats.pop();
+      msg.textContent = 'Не удалось сохранить: ' + (e.message === 'STORE' ? 'нет места' : 'ошибка шифрования'); return;
+    }
+    backN(1);
+  }
+  return h('div', { class: 'scr' }, header(ex ? 'Изменить' : 'Новая запись'),
+    h('div', { class: 'body' }, field('Название', iTitle), field('Логин', iLogin), field('Пароль', pw.wrap), gbtn, panel,
+      field('Адрес сайта', iUrl), field('Категория', sel, newCat), field('Заметка', note), msg),
+    h('div', { class: 'bar' }, btn('Отмена', '', () => backN(1)), btn('Сохранить', 'pri w2', saveIt)));
+};
+
+// ---- Категории (группы) ----
+function validCatName(raw, current) {
+  const n = normCat(raw);
+  if (!n) return { err: 'Введите название' };
+  const i = catIndex(S.data.cats, n);
+  if (i >= 0 && (current === undefined || i !== catIndex(S.data.cats, current))) return { err: 'Такая категория уже есть' };
+  return { name: n };
+}
+function newCatDialog(onDone) {
+  const inp = textInp('', 'Например: Семья'), msg = h('div', { class: 'msg' });
+  dialog('Новая категория', [h('div', { class: 'fld' }, inp), msg], [
+    {
+      t: 'Создать', cls: 'pri', fn: async close => {
+        const v = validCatName(inp.value); if (v.err) { msg.textContent = v.err; return; }
+        if (!(await mutate(() => S.data.cats.push(v.name)))) { msg.textContent = 'Не удалось сохранить'; return; }
+        if (onDone) onDone(v.name);
+        close(); setTimeout(() => { render(true); toast('Категория «' + v.name + '» создана'); }, 80);
+      }
+    },
+    { t: 'Отмена', fn: close => close() }]);
+}
+function catDialog(c) {
+  const inp = textInp(c, 'Название'), msg = h('div', { class: 'msg' });
+  const n = S.data.entries.filter(e => e.cat === c).length;
+  dialog('Категория', [h('p', {}, 'В ней: ' + plural(n)), h('div', { class: 'fld' }, inp), msg], [
+    {
+      t: 'Сохранить название', cls: 'pri', fn: async close => {
+        const v = validCatName(inp.value, c); if (v.err) { msg.textContent = v.err; return; }
+        if (v.name === c) { close(); return; }
+        const ok = await mutate(() => {
+          const i = S.data.cats.indexOf(c); S.data.cats[i] = v.name;
+          for (const e of S.data.entries) if (e.cat === c) { e.cat = v.name; e.updated = Date.now(); }
+        });
+        if (!ok) { msg.textContent = 'Не удалось сохранить'; return; }
+        if (S.cat === c) S.cat = v.name;
+        close(); setTimeout(() => { render(true); toast('Переименовано'); }, 80);
+      }
+    },
+    { t: 'Удалить категорию', cls: 'bad', fn: close => { close(); setTimeout(() => deleteCatDialog(c), 120); } },
+    { t: 'Отмена', fn: close => close() }]);
+}
+function deleteCatDialog(c) {
+  const others = S.data.cats.filter(x => x !== c);
+  if (!others.length) { toast('Нельзя удалить последнюю категорию'); return; }
+  const n = S.data.entries.filter(e => e.cat === c).length;
+  const sel = h('select', { class: 'inp' }, others.map(x => h('option', { value: x }, x)));
+  const def = others.find(x => normCat(x).toLocaleLowerCase('ru') === 'общее'); if (def) sel.value = def;
+  const nodes = n ? [h('p', {}, 'В категории «' + c + '» ' + plural(n) + '. Записи не удаляются, они переедут в выбранную категорию.'), h('div', { class: 'fld' }, h('label', { class: 'lb' }, 'Перенести в'), sel)]
+    : [h('p', {}, 'Категория «' + c + '» пуста и будет удалена.')];
+  dialog('Удалить категорию?', nodes, [
+    {
+      t: 'Удалить', cls: 'bad', fn: async close => {
+        const target = n ? sel.value : '';
+        const ok = await mutate(() => {
+          S.data.cats = S.data.cats.filter(x => x !== c);
+          for (const e of S.data.entries) if (e.cat === c) { e.cat = target; e.updated = Date.now(); }
+        });
+        if (!ok) { toast('Не удалось сохранить'); return; }
+        if (S.cat === c) S.cat = '';
+        close(); setTimeout(() => { render(true); toast('Категория удалена'); }, 80);
+      }
+    },
+    { t: 'Отмена', fn: close => close() }]);
+}
+SCREENS.cats = function () {
+  const counts = {};
+  for (const e of S.data.entries) counts[e.cat] = (counts[e.cat] || 0) + 1;
+  return h('div', { class: 'scr' }, header('Категории'),
+    h('div', { class: 'body' },
+      h('p', { class: 't' }, 'Категории помогают разложить пароли по группам. Нажмите на категорию, чтобы переименовать или удалить её.'),
+      ...S.data.cats.map(c => h('button', { class: 'set', onclick: () => catDialog(c) }, h('div', { class: 'tx' }, c, h('small', {}, plural(counts[c] || 0))), ico('edit')))),
+    h('div', { class: 'bar' }, btn('Новая категория', 'pri', () => newCatDialog(), 'plus')));
+};
+
+// ---- Настройки ----
+SCREENS.settings = function () {
+  function item(t, sub, fn, cls) { return h('button', { class: 'set ' + (cls || ''), onclick: fn }, h('div', { class: 'tx' }, t, sub ? h('small', {}, sub) : null), ico('chev')); }
+  const m = jget(LS.meta, {});
+  return h('div', { class: 'scr' }, header('Настройки'),
+    h('div', { class: 'body' },
+      item('Категории', 'Создать, переименовать, удалить', () => go('cats')),
+      item('Резервная копия', m.last ? 'Последняя: ' + fmtDate(m.last) : 'Ещё не делалась', () => go('backup')),
+      item('Сменить мастер-пароль', 'Все данные будут перешифрованы', () => go('chpass')),
+      item('О безопасности', 'Что приложение защищает, а что нет', () => go('about')),
+      item('Стереть сейф', 'Удалить все записи с телефона', () => openWipeUnlocked(), 'bad'),
+      h('p', { class: 't', style: 'margin-top:20px' }, 'Сейф паролей, версия ' + VERSION + '. Автоблокировка: через 1 минуту после ухода из приложения.')),
+    h('div', { class: 'bar' }, btn('Заблокировать', 'pri', () => lock(), 'lock')));
+};
+function openWipeUnlocked() {
+  const inp = textInp('', 'Введите слово УДАЛИТЬ');
+  dialog('Стереть сейф?', [h('p', {}, 'Все записи будут удалены с телефона. Если нет резервной копии, вернуть их нельзя.'), h('div', { class: 'fld' }, inp)], [
+    { t: 'Стереть всё', cls: 'bad', fn: close => { if (inp.value.trim().toUpperCase() !== 'УДАЛИТЬ') { toast('Введите слово УДАЛИТЬ'); return; } wipeAll(); } },
+    { t: 'Отмена', fn: close => close() }]);
+}
+
+// ---- О безопасности ----
+SCREENS.about = function () {
+  const li = t => h('li', {}, t);
+  return h('div', { class: 'scr' }, header('О безопасности'),
+    h('div', { class: 'body' },
+      h('div', { class: 'sec' }, 'Что даёт приложение'),
+      h('ul', { class: 'pl' }, li('Записи хранятся только на этом телефоне в зашифрованном виде (AES-256-GCM). Ключ получается из мастер-пароля (PBKDF2-SHA256, 600 000 итераций).'), li('Мастер-пароль и ключ не пишутся на диск. Приложение не имеет доступа в интернет.'), li('Скриншоты и показ содержимого в списке недавних приложений запрещены.'), li('После неверных попыток вход замедляется. Автоблокировка через 1 минуту в фоне.'), li('Буфер обмена очищается через 30 секунд.')),
+      h('div', { class: 'sec' }, 'Чего приложение не даёт'),
+      h('ul', { class: 'pl' }, li('Если забыли мастер-пароль, данные не вернуть. Никому, включая автора.'), li('Слабый мастер-пароль можно подобрать, если файл данных попадёт к злоумышленнику (взломанный телефон, root). Задержки при входе тогда не защитят: подбор идёт на его компьютере. Лучшая защита: длинная фраза из 4–5 слов.'), li('Если телефон заражён вредоносной программой или следящим приложением, оно может увидеть пароль в момент ввода или показа.'), li('Телефон потерян: без мастер-пароля данные нечитаемы, но сразу смените важные пароли с другого устройства, а новый телефон восстановите из резервной копии.'), li('Резервная копия защищена тем мастер-паролем, который был на момент её создания.'))));
+};
+
+// ---- Резервная копия ----
+function todayStr() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+async function makeBackupText() {
+  const blob = await sealData(S.data, S.key, S.salt, S.iter);
+  blob.type = 'backup';
+  return JSON.stringify(blob);
+}
+function markBackup() { const m = jget(LS.meta, {}); m.last = Date.now(); m.dirty = false; lsSet(LS.meta, JSON.stringify(m)); }
+function capPlugins() { return window.Capacitor && window.Capacitor.Plugins ? window.Capacitor.Plugins : {}; }
+function isNative() { try { return !!(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web'); } catch (e) { return false; } }
+async function exportBackup() {
+  S.graceUntil = Date.now() + GRACE_MS;
+  const text = await makeBackupText(), name = 'sejf-' + todayStr() + '.sejf';
+  const P = capPlugins();
+  if (P.Filesystem && P.Share) {
+    try {
+      const r = await P.Filesystem.writeFile({ path: name, data: text, directory: 'CACHE', encoding: 'utf8' });
+      await P.Share.share({ title: 'Резервная копия сейфа', files: [r.uri], dialogTitle: 'Куда сохранить копию' });
+      markBackup(); toast('Готово. Убедитесь, что файл сохранён (Диск, Telegram, «Файлы»).', 4500); return;
+    } catch (e) {
+      if (/cancel/i.test(String(e && (e.message || e)))) return;
+    }
+  } else if (!isNative()) {
+    const a = h('a', { href: URL.createObjectURL(new Blob([text], { type: 'application/octet-stream' })), download: name });
+    document.body.append(a); a.click(); a.remove(); markBackup(); toast('Файл скачан'); return;
+  }
+  dialog('Не удалось поделиться файлом', [h('p', {}, 'Можно скопировать копию как текст и сохранить его, например, в «Избранное» Telegram или в заметки. Текст зашифрован.')], [
+    { t: 'Скопировать как текст', cls: 'pri', fn: async close => { try { await navigator.clipboard.writeText(text); markBackup(); toast('Текст копии скопирован'); } catch (e) { toast('Не удалось скопировать'); } close(); } },
+    { t: 'Закрыть', fn: close => close() }]);
+}
+async function copyBackupText() {
+  try { await navigator.clipboard.writeText(await makeBackupText()); markBackup(); toast('Зашифрованный текст копии скопирован'); } catch (e) { toast('Не удалось скопировать'); }
+}
+function pickFile(cb) {
+  S.graceUntil = Date.now() + GRACE_MS;
+  const i = h('input', { type: 'file', style: 'display:none' });
+  i.addEventListener('change', async () => {
+    const f = i.files && i.files[0]; i.remove(); if (!f) return;
+    if (f.size > 20 * 1024 * 1024) { toast('Файл слишком большой'); return; }
+    try { cb(await f.text()); } catch (e) { toast('Не удалось прочитать файл'); }
+  });
+  document.body.append(i); i.click();
+}
+function pasteBackup(mode) {
+  const ta = h('textarea', { class: 'inp', placeholder: 'Вставьте текст копии', spellcheck: 'false' });
+  dialog('Вставить текст копии', [h('div', { class: 'fld' }, ta)], [
+    { t: 'Продолжить', cls: 'pri', fn: close => { const t = ta.value; close(); setTimeout(() => startImport(t, mode), 80); } },
+    { t: 'Отмена', fn: close => close() }]);
+}
+// mode: 'restore' (первый запуск) или 'merge' (внутри открытого сейфа)
+function startImport(text, mode) {
+  let blob;
+  try { blob = JSON.parse(String(text).trim()); checkBlob(blob); } catch (e) { toast('Это не файл резервной копии сейфа'); return; }
+  const pw = pwBox('Пароль от этой копии'), msg = h('div', { class: 'msg' });
+  async function run(how, close, b) {
+    if (!pw.inp.value) { msg.textContent = 'Введите пароль'; return; }
+    b.disabled = true; msg.className = 'msg ok'; msg.textContent = 'Проверка…'; await sleepFrame();
+    let r;
+    try { r = await unlockVault(pw.inp.value, blob); } catch (e) { msg.className = 'msg'; msg.textContent = 'Неверный пароль или файл повреждён'; b.disabled = false; return; }
+    if (how === 'restore') {
+      if (!lsSet(LS.vault, JSON.stringify(blob))) { msg.className = 'msg'; msg.textContent = 'Не удалось сохранить'; b.disabled = false; return; }
+      guardOk(); const m = jget(LS.meta, {}); m.last = Date.now(); m.dirty = false; lsSet(LS.meta, JSON.stringify(m));
+      close(); setTimeout(() => { startSession(r); toast('Сейф восстановлен: записей ' + r.data.entries.length); }, 80); return;
+    }
+    if (!S.key) { close(); toast('Сейф был заблокирован. Откройте его и повторите'); return; }
+    const before = S.data.entries.slice(), beforeCats = S.data.cats.slice();
+    if (how === 'replace') { S.data.entries = r.data.entries; S.data.cats = r.data.cats || []; }
+    else { S.data.entries = mergeEntries(before, r.data.entries).entries; S.data.cats = mergeCats(S.data.cats, r.data.cats); }
+    ensureCats(S.data);
+    try { await save(); } catch (e) { S.data.entries = before; S.data.cats = beforeCats; msg.className = 'msg'; msg.textContent = 'Не удалось сохранить'; b.disabled = false; return; }
+    const added = S.data.entries.length - (how === 'replace' ? 0 : before.length);
+    close(); setTimeout(() => { render(true); toast(how === 'replace' ? 'Записи заменены: ' + S.data.entries.length : 'Добавлено записей: ' + Math.max(0, added)); }, 80);
+  }
+  const wrapped = [];
+  if (mode === 'restore') wrapped.push({ t: 'Восстановить', cls: 'pri', fn: (c, el) => run('restore', c, el) });
+  else {
+    wrapped.push({ t: 'Добавить к моим записям', cls: 'pri', fn: (c, el) => run('merge', c, el) });
+    wrapped.push({ t: 'Заменить мои записи копией', cls: 'bad', fn: (c, el) => run('replace', c, el) });
+  }
+  wrapped.push({ t: 'Отмена', fn: c => c() });
+  dialog(mode === 'restore' ? 'Восстановление из копии' : 'Загрузка копии', [h('p', {}, 'Введите мастер-пароль, который был у сейфа в момент создания этой копии.'), h('div', { class: 'fld' }, pw.wrap), msg], wrapped);
+}
+SCREENS.backup = function () {
+  const m = jget(LS.meta, {});
+  return h('div', { class: 'scr' }, header('Резервная копия'),
+    h('div', { class: 'body' },
+      h('div', { class: 'note warn' }, h('b', {}, 'Зачем это нужно. '), 'Все пароли лежат только на этом телефоне. Потерялся, сломался, сброшен до заводских настроек или приложение удалено — и без копии записи исчезнут навсегда. Копия — зашифрованный файл, его безопасно хранить в облаке или в Telegram.'),
+      h('p', { class: 't' }, m.last ? 'Последняя копия: ' + fmtDate(m.last) + (m.dirty ? ' (с тех пор были изменения)' : '') : 'Копия ещё не делалась.'),
+      btn('Сохранить копию', 'pri', exportBackup, 'copy'), h('div', { style: 'height:10px' }),
+      btn('Загрузить из файла', '', () => pickFile(t => startImport(t, 'merge'))),
+      h('p', { class: 't', style: 'margin-top:14px' }, 'Копия защищена мастер-паролем, который действует сейчас. Если потом смените пароль, старые копии будут открываться старым паролем. После смены сделайте новую копию.'),
+      h('div', { class: 'sec' }, 'Если не получается'),
+      btn('Скопировать копию как текст', '', copyBackupText), h('div', { style: 'height:10px' }),
+      btn('Вставить текст копии', '', () => pasteBackup('merge'))));
+};
+
+// ---- Смена мастер-пароля ----
+SCREENS.chpass = function () {
+  const cur = pwBox('Текущий пароль'), n1 = pwBox('Новый пароль', upd), n2 = pwBox('Новый пароль ещё раз', upd);
+  const m = meter(() => n1.inp.value), msg = h('div', { class: 'msg' });
+  const go1 = btn('Сменить пароль', 'pri', run); go1.disabled = true;
+  function upd() {
+    const lv = m.upd(), a = n1.inp.value, b = n2.inp.value;
+    msg.className = 'msg'; msg.textContent = a && !lv.ok ? 'Слишком простой: нужно 10+ символов и уровень «Хороший».' : (b && a !== b ? 'Пароли не совпадают' : '');
+    go1.disabled = !(lv.ok && a === b && cur.inp.value);
+  }
+  cur.inp.addEventListener('input', upd);
+  async function run() {
+    go1.disabled = true; msg.className = 'msg ok'; msg.textContent = 'Перешифровка…'; await sleepFrame();
+    try {
+      let stored; try { stored = JSON.parse(lsGet(LS.vault)); } catch (e) { throw new Error('FORMAT'); }
+      await unlockVault(cur.inp.value, stored);                       // проверка текущего пароля расшифровкой
+    } catch (e) { msg.className = 'msg'; msg.textContent = 'Текущий пароль неверен'; go1.disabled = false; return; }
+    try {
+      const r = await createVault(n1.inp.value, S.data);              // новая соль, новый ключ, новый IV
+      await unlockVault(n1.inp.value, r.blob);                         // контрольная расшифровка перед записью
+      if (!lsSet(LS.vault, JSON.stringify(r.blob))) throw new Error('STORE');
+      S.key = r.key; S.salt = r.salt; S.iter = r.iter;
+      const mt = jget(LS.meta, {}); mt.dirty = true; lsSet(LS.meta, JSON.stringify(mt));
+      backN(1); setTimeout(() => toast('Пароль изменён. Сделайте новую резервную копию', 4500), 150);
+    } catch (e) { msg.className = 'msg'; msg.textContent = 'Не удалось сменить пароль. Старый пароль продолжает действовать.'; go1.disabled = false; }
+  }
+  return h('div', { class: 'scr' }, header('Смена пароля'),
+    h('div', { class: 'body' }, h('div', { class: 'note warn' }, h('b', {}, 'Новый пароль тоже нельзя восстановить. '), 'Запишите его на бумаге.'),
+      field('Текущий пароль', cur.wrap), field('Новый пароль', n1.wrap, m.node), field('Ещё раз', n2.wrap), msg),
+    h('div', { class: 'bar' }, go1));
+};
+
+// =====================  ЗАПУСК  =====================
+(async function init() {
+  try {
+    const P = capPlugins();
+    if (P.Filesystem) {                         // убрать старые копии из кэша
+      const l = await P.Filesystem.readdir({ path: '', directory: 'CACHE' });
+      for (const f of (l.files || [])) { const n = f.name || f; if (/\.sejf$/.test(n)) await P.Filesystem.deleteFile({ path: n, directory: 'CACHE' }); }
+    }
+  } catch (e) { }
+})();
+S.stack = [{ n: hasVault() ? 'unlock' : 'setup', p: {} }];
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+name: Создать ключ подписи (один раз)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  keygen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Создание ключа
+        run: |
+          set +x
+          PASS=$(openssl rand -hex 16)
+          keytool -genkeypair -storetype PKCS12 -keystore vault.jks -alias sejf \
+            -keyalg RSA -keysize 4096 -validity 36500 \
+            -storepass "$PASS" -keypass "$PASS" \
+            -dname "CN=Sejf Paroley, O=Personal, C=RU"
+          {
+            echo "KEYSTORE_BASE64"
+            base64 -w0 vault.jks; echo; echo
+            echo "KEYSTORE_PASSWORD"
+            echo "$PASS"; echo
+            echo "KEY_ALIAS"
+            echo "sejf"
+          } > signing-secrets.txt
+
+      - name: Сохранение ключа (одни сутки)
+        uses: actions/upload-artifact@v4
+        with:
+          name: signing-secrets
+          path: signing-secrets.txt
+          retention-days: 1

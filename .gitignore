@@ -1,0 +1,9 @@
+node_modules/
+android/
+work/
+.DS_Store
+Thumbs.db
+*.sejf
+signing-secrets*
+*.jks
+*.keystore

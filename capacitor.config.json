@@ -1,0 +1,11 @@
+{
+  "appId": "com.myvault.sejf",
+  "appName": "Сейф паролей",
+  "webDir": "www",
+  "backgroundColor": "#050a16",
+  "loggingBehavior": "none",
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  }
+}

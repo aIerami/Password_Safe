@@ -1,0 +1,74 @@
+name: Собрать APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Проверка ключа подписи
+        env:
+          KS: ${{ secrets.KEYSTORE_BASE64 }}
+          KP: ${{ secrets.KEYSTORE_PASSWORD }}
+          KA: ${{ secrets.KEY_ALIAS }}
+        run: |
+          if [ -z "$KS" ] || [ -z "$KP" ] || [ -z "$KA" ]; then
+            echo "::error::Не заданы секреты KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS. Сначала запустите «Создать ключ подписи» и добавьте секреты (инструкция в README.md, шаг 4)."
+            exit 1
+          fi
+          echo "$KS" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+
+      - name: Установка зависимостей
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Создание Android-проекта
+        run: npx cap add android
+
+      - name: Безопасность, иконка, подпись
+        run: bash scripts/patch-android.sh
+
+      - name: Копирование сейфа в проект
+        run: npx cap sync android
+
+      - name: Сборка APK
+        working-directory: android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Проверка готового APK
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          echo "--- Разрешения APK ---"
+          "$BT/aapt2" dump permissions "$APK" || true
+          if "$BT/aapt2" dump permissions "$APK" | grep -q 'android.permission.INTERNET'; then
+            echo "::error::В APK обнаружено разрешение INTERNET"; exit 1
+          fi
+          echo "--- Подпись (отпечаток должен быть одинаковым во всех сборках) ---"
+          "$BT/apksigner" verify --print-certs "$APK" | grep -E 'SHA-256|Signer #1 certificate DN'
+
+      - name: Сохранение APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sejf-Paroley-APK
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
