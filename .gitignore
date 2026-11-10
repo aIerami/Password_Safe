@@ -1,6 +1,6 @@
-node_modules/
-android/
-work/
+/node_modules/
+/android/
+/work/
 .DS_Store
 Thumbs.db
 *.sejf
